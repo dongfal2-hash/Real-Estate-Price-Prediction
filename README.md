@@ -37,37 +37,46 @@ On 1,879 residential transactions, ensemble machine learning decisively outperfo
 
 #### tree 
 .
+## Project Structure
 
-├── data
-│   └── cleaned_df.csv
-├── ppt
-│   └── Real_Estate_Price_Prediction.mp4
-├── python
-│   ├── real_estate_analysis.py
-│   ├── stage0.py
-│   ├── stage2.py
-│   ├── stage3.py
-│   └── stage4.py
-├── README.md
-├── report
-│   └── real estate report.pdf
-├── results
-│   ├── csv
-│   │   ├── encoded_data.csv
-│   │   └── test_predictions.csv
-│   ├── RE_GradientBoostingRegressor_Model.pkl
-│   ├── RE_LinearRegression_Model.pkl
-│   ├── RE_RandomForestRegressor_Model.pkl
-│   ├── txt
-│   │   └── real_estate_report.txt
-│   └── visual
-│       ├── actual_vs_predicted.png
-│       ├── EDA_heatmap.png
-│       ├── EDA_target_histogram.png
-│       ├── feature_importance.png
-│       ├── mae_comparison.png
-│       └── model_comparison.png
-├── slide
-│   └── summary.png
-└── streamlit_app.py
-
+```text
+Real-Estate-Price-Prediction/
+├── data/
+│   └── cleaned_df.csv                  # Cleaned real-estate dataset
+│
+├── python/
+│   ├── real_estate_analysis.py         # Main analysis pipeline
+│   ├── stage0.py                       # Shared utilities and configuration
+│   ├── stage2.py                       # Data processing
+│   ├── stage3.py                       # Model training and evaluation
+│   └── stage4.py                       # Deployment outputs and insights
+│
+├── results/
+│   ├── csv/
+│   │   ├── encoded_data.csv
+│   │   └── test_predictions.csv
+│   ├── txt/
+│   │   └── real_estate_report.txt
+│   ├── visual/
+│   │   ├── actual_vs_predicted.png
+│   │   ├── EDA_heatmap.png
+│   │   ├── EDA_target_histogram.png
+│   │   ├── feature_importance.png
+│   │   ├── mae_comparison.png
+│   │   └── model_comparison.png
+│   ├── RE_GradientBoostingRegressor_Model.pkl
+│   ├── RE_LinearRegression_Model.pkl
+│   └── RE_RandomForestRegressor_Model.pkl
+│
+├── ppt/
+│   └── Real_Estate_Price_Prediction.mp4 # Presentation video
+│
+├── report/
+│   └── real estate report.pdf          # Final project report
+│
+├── slide/
+│   └── summary.png                     # Project summary image
+│
+├── streamlit_app.py                    # Streamlit prediction application
+└── README.md                           # Project documentation
+```
