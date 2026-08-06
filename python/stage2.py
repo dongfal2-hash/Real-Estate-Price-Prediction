@@ -1,0 +1,213 @@
+"""
+stage2_data_engineering.py
+====================================================================
+Stage 2 — Data Engineering (원-핫 인코딩 / drop / target 분리 / EDA 시각화)
+
+핵심 질문: Stage 1의 질문에 답하기 위해 어떤 변수를,
+           어떤 형태로 모델에 투입해야 하는가?
+
+처리 순서: 원-핫 인코딩 -> drop -> target(X, y) 분리
+           -> (옵션) EDA 시각화(히스토그램/히트맵) -> (옵션) CSV 저장
+train/test split은 다루지 않는다 (Stage 3 modeling의 책임).
+"""
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ---------------------------------------------------------------------------
+# 입력 상수 (재설정 가능) — 이 값만 바꾸면 파이프라인 전체가 따라감
+# ---------------------------------------------------------------------------
+HOTCODING_COLS = ["property_type"]   # 원-핫 인코딩할 컬럼. 비우면([]) 그냥 패스
+TARGET_FEATURE = "price"              # Y
+DROP_FEATURES = []                    # 모델 입력에서 제외할 컬럼
+
+
+def one_hot_encode(df: pd.DataFrame, hotcoding: list = None) -> pd.DataFrame:
+    """hotcoding 리스트의 컬럼을 원-핫 인코딩. 비어있으면 그대로 반환(패스)."""
+    hotcoding = hotcoding if hotcoding is not None else HOTCODING_COLS
+    if not hotcoding:
+        return df.copy()
+    existing = [c for c in hotcoding if c in df.columns]
+    if not existing:
+        return df.copy()
+    return pd.get_dummies(df, columns=existing, drop_first=False, dtype=int)
+
+
+def drop_columns(df: pd.DataFrame, drop_feature: list = None) -> pd.DataFrame:
+    """drop_feature 컬럼 제거. 없는 컬럼은 무시."""
+    drop_feature = drop_feature if drop_feature is not None else DROP_FEATURES
+    if not drop_feature:
+        return df.copy()
+    existing = [c for c in drop_feature if c in df.columns]
+    return df.drop(columns=existing)
+
+
+def split_target(df: pd.DataFrame, target_feature: str = None):
+    """target_feature 기준으로 X, y 분리."""
+    target_feature = target_feature if target_feature is not None else TARGET_FEATURE
+    y = df[target_feature]
+    x = df.drop(columns=[target_feature])
+    return x, y
+
+
+# ---------------------------------------------------------------------------
+# EDA 시각화 — Y 히스토그램 / 상관관계 히트맵
+# ---------------------------------------------------------------------------
+def plot_target_histogram(
+    y: pd.Series,
+    visual_dir: str,
+    save_fig_fn,
+    filename: str = "EDA_target_histogram.png",
+    bins: int = 30,
+    log=None,
+) -> str:
+    """타깃(Y) 변수의 분포 히스토그램을 저장한다."""
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.hist(y, bins=bins, color="steelblue", edgecolor="white")
+    ax.set_title(f"Distribution of Target: {y.name}")
+    ax.set_xlabel(y.name)
+    ax.set_ylabel("Count")
+    plt.tight_layout()
+    path = save_fig_fn(fig, visual_dir, filename)
+
+    if log:
+        log.section("STAGE 2 — EDA: TARGET HISTOGRAM")
+        log.log(f"Target: {y.name}")
+        log.log(f"mean={y.mean():,.2f}  std={y.std():,.2f}  "
+                 f"min={y.min():,.2f}  max={y.max():,.2f}")
+        log.log(f"Saved: {path}")
+
+    return path
+
+
+def plot_correlation_heatmap(
+    df: pd.DataFrame,
+    target_feature: str,
+    visual_dir: str,
+    save_fig_fn,
+    filename: str = "EDA_heatmap.png",
+    log=None,
+) -> str:
+    """수치형 변수 간 상관관계(타깃 포함) 히트맵을 저장한다."""
+    numeric_df = df.select_dtypes(include="number")
+    corr = numeric_df.corr()
+
+    n = len(corr.columns)
+    fig, ax = plt.subplots(figsize=(max(6, 0.6 * n), max(5, 0.6 * n)))
+    im = ax.imshow(corr.values, cmap="coolwarm", vmin=-1, vmax=1)
+    ax.set_xticks(range(n))
+    ax.set_xticklabels(corr.columns, rotation=45, ha="right")
+    ax.set_yticks(range(n))
+    ax.set_yticklabels(corr.columns)
+    for i in range(n):
+        for j in range(n):
+            ax.text(j, i, f"{corr.values[i, j]:.2f}", ha="center", va="center",
+                     color="black", fontsize=7)
+    fig.colorbar(im, ax=ax, shrink=0.8)
+    ax.set_title("Feature Correlation Heatmap")
+    plt.tight_layout()
+    path = save_fig_fn(fig, visual_dir, filename)
+
+    if log:
+        log.section("STAGE 2 — EDA: CORRELATION HEATMAP")
+        if target_feature in corr.columns:
+            target_corr = corr[target_feature].drop(target_feature).sort_values(ascending=False)
+            log.log(f"Correlation with target '{target_feature}':\n{target_corr.to_string()}")
+        log.log(f"Saved: {path}")
+
+    return path
+
+
+def data_processing(
+    df: pd.DataFrame,
+    hotcoding: list = None,
+    target_feature: str = None,
+    drop_feature: list = None,
+    save_dir: str = None,
+    save_dataframe_fn=None,
+    filename: str = "encoded_data.csv",
+    visual_dir: str = None,
+    save_fig_fn=None,
+    heatmap_filename: str = "EDA_heatmap.png",
+    histogram_filename: str = "EDA_target_histogram.png",
+    log=None,
+) -> dict:
+    """
+    input: df (.csv 형태의 원본 데이터프레임)
+
+    INPUT CONSTANT
+        hotcoding      = [원-핫 인코딩할 범주형 컬럼]   예) ["property_type"]
+        target feature = 타깃(Y) 컬럼명                예) "price"
+        drop feature   = 모델 입력에서 제외할 컬럼       예) ["year_sold"]
+
+    처리 순서: 원-핫 인코딩 -> drop -> target 분리
+              -> (옵션) EDA 시각화(히스토그램/히트맵) -> (옵션) CSV 저장
+
+    시각화 옵션:
+        visual_dir, save_fig_fn 을 둘 다 넘기면
+          - EDA_heatmap.png            (피처-타깃 상관관계)
+          - EDA_target_histogram.png   (타깃 분포)
+        를 저장하고 log에도 기록한다. 둘 중 하나라도 없으면 시각화는 스킵.
+
+    output: {"encoded_df", "x", "y", "feature_columns", "target_feature", "hotcoding"}
+    """
+    hotcoding = hotcoding if hotcoding is not None else HOTCODING_COLS
+    target_feature = target_feature if target_feature is not None else TARGET_FEATURE
+    drop_feature = drop_feature if drop_feature is not None else DROP_FEATURES
+
+    encoded_df = one_hot_encode(df, hotcoding=hotcoding)
+    encoded_df = drop_columns(encoded_df, drop_feature=drop_feature)
+    x, y = split_target(encoded_df, target_feature=target_feature)
+    feature_columns = list(x.columns)
+
+    if log:
+        log.section("STAGE 2 — DATA ENGINEERING")
+        log.log(f"Hotcoding columns: {hotcoding}")
+        log.log(f"Target feature: {target_feature}")
+        log.log(f"Dropped features: {drop_feature}")
+        log.log(f"Final feature columns ({len(feature_columns)}): {feature_columns}")
+
+    heatmap_path = None
+    histogram_path = None
+    if visual_dir and save_fig_fn:
+        heatmap_path = plot_correlation_heatmap(
+            encoded_df, target_feature, visual_dir, save_fig_fn,
+            filename=heatmap_filename, log=log,
+        )
+        histogram_path = plot_target_histogram(
+            y, visual_dir, save_fig_fn,
+            filename=histogram_filename, log=log,
+        )
+
+    if save_dir and save_dataframe_fn:
+        save_dataframe_fn(encoded_df, save_dir, filename)
+
+    return {
+        "encoded_df": encoded_df, "x": x, "y": y,
+        "feature_columns": feature_columns, "target_feature": target_feature,
+        "hotcoding": hotcoding,  # build_feature_row에서 재사용
+        "heatmap_path": heatmap_path, "histogram_path": histogram_path,
+    }
+
+
+def build_feature_row(feature_columns: list, inputs: dict, hotcoding: list = None) -> pd.DataFrame:
+    """
+    사용자 입력(dict)을 학습 때 사용한 컬럼 순서/구성에 맞는 1행 DataFrame으로 변환
+    (Streamlit 예측용). hotcoding에 있는 모든 컬럼에 대해 일반화해서 처리한다.
+    """
+    hotcoding = hotcoding if hotcoding is not None else HOTCODING_COLS
+    row = {col: 0 for col in feature_columns}
+
+    for key, value in inputs.items():
+        if key in hotcoding:
+            continue  # 원-핫 대상은 아래에서 별도 처리
+        if key in row:
+            row[key] = value
+
+    for cat_col in hotcoding:
+        if cat_col in inputs:
+            onehot_col = f"{cat_col}_{inputs[cat_col]}"
+            if onehot_col in row:
+                row[onehot_col] = 1
+
+    return pd.DataFrame([row])[feature_columns]

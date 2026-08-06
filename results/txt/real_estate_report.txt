@@ -1,0 +1,110 @@
+
+======================================================================
+Title: REAL ESTATE PRICE PREDICTION
+======================================================================
+Data shape: (1879, 11)
+
+Column info:
+                dtype  null_count  null_pct(%)
+column                                        
+price           int64           0          0.0
+year_sold       int64           0          0.0
+property_tax    int64           0          0.0
+insurance       int64           0          0.0
+beds            int64           0          0.0
+baths           int64           0          0.0
+sqft            int64           0          0.0
+year_built      int64           0          0.0
+lot_size        int64           0          0.0
+basement        int64           0          0.0
+property_type  object           0          0.0
+
+Column head:
+column   price  year_sold  property_tax  insurance  beds  baths  sqft  year_built  lot_size  basement property_type
+0       295850       2013           234         81     1      1   584        2013         0         0         Condo
+1       216500       2006           169         51     1      1   612        1965         0         0         Condo
+2       279900       2012           216         74     1      1   615        1963         0         0         Condo
+
+Column tail:
+column   price  year_sold  property_tax  insurance  beds  baths  sqft  year_built  lot_size  basement property_type
+1876    600000       1999           942        287     5      6  7064        1995    217800         1       Bunglow
+1877    759900       2009           803        245     5      6  7500        2006      8886         1       Bunglow
+1878    735000       2015          1459        444     5      6  7515        1958     10497         1       Bunglow
+
+======================================================================
+STAGE 2 — DATA ENGINEERING
+======================================================================
+Hotcoding columns: ['property_type']
+Target feature: price
+Dropped features: []
+Final feature columns (11): ['year_sold', 'property_tax', 'insurance', 'beds', 'baths', 'sqft', 'year_built', 'lot_size', 'basement', 'property_type_Bunglow', 'property_type_Condo']
+
+======================================================================
+STAGE 2 — EDA: CORRELATION HEATMAP
+======================================================================
+Correlation with target 'price':
+property_tax             0.534598
+insurance                0.532402
+sqft                     0.469026
+baths                    0.388289
+beds                     0.383074
+basement                 0.271106
+property_type_Bunglow    0.271106
+lot_size                 0.181682
+year_sold                0.110064
+year_built               0.032251
+property_type_Condo     -0.271106
+Saved: /Users/dh/Downloads/1-1/results/visual/EDA_heatmap.png
+
+======================================================================
+STAGE 2 — EDA: TARGET HISTOGRAM
+======================================================================
+Target: price
+mean=423,055.18  std=151,537.54  min=200,000.00  max=800,000.00
+Saved: /Users/dh/Downloads/1-1/results/visual/EDA_target_histogram.png
+
+======================================================================
+STAGE 3 — HYPERPARAMETERS USED
+======================================================================
+test_size=0.2, random_state=42, stratify_prefix=property_type_Condo
+Model1 (LinearRegression) params: {}
+Model2 (RandomForestRegressor) params: {'n_estimators': 200, 'criterion': 'absolute_error', 'random_state': 42, 'n_jobs': -1}
+Model3 (GradientBoostingRegressor) params: {'n_estimators': 200, 'max_depth': 3, 'learning_rate': 0.1, 'random_state': 42}
+
+======================================================================
+STAGE 3 — STATISTICS & MACHINE LEARNING
+======================================================================
+Models compared: ['LinearRegression', 'RandomForestRegressor', 'GradientBoostingRegressor']
+
+[LinearRegression]
+  Train MAE: 91,016.62
+  Test MAE:  92,220.25
+  Test RMSE: 116,261.63
+  Test R2:   0.4592
+
+[RandomForestRegressor]
+  Train MAE: 17,619.10
+  Test MAE:  43,795.09
+  Test RMSE: 64,423.61
+  Test R2:   0.8340
+
+[GradientBoostingRegressor]
+  Train MAE: 33,335.93
+  Test MAE:  44,611.30
+  Test RMSE: 65,024.32
+  Test R2:   0.8308
+
+Best model (lowest test MAE): RandomForestRegressor
+
+======================================================================
+STAGE 3 — MODEL COMPARISON GRAPH
+======================================================================
+Saved: /Users/dh/Downloads/1-1/results/visual/model_comparison.png
+Best model highlighted: RandomForestRegressor
+
+======================================================================
+STAGE 4 — MODEL DEPLOYMENT / INSIGHT
+======================================================================
+[Model to deploy] RandomForestRegressor (Test MAE $43,795, R2 0.834).
+[Top drivers] insurance, year_sold, property_tax 순으로 가격에 영향을 미침.
+[Action] 위 상위 요인을 기준으로 가격 책정 가이드라인을 조정하고, 실거래가와 예측가 차이가 큰 매물은 별도 검토 대상으로 플래그 처리할 것.
