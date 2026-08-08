@@ -1,20 +1,20 @@
 """
 stage4_model_deployment.py
 ====================================================================
-Stage 4 — Model Deployment (결과 저장 / 시각화 / 인사이트)
+Stage 4 — Model Deployment (result storage / visualization / insights)
 
-핵심 질문: 이 모델을 통해 얻을 수 있는 인사이트는 무엇이며,
-           결국 무엇을 해야 하는가 (what to do)?
+Key questions: What insights does this model provide, and what actions should be taken?
 
-Stage 3(data_modeling)의 산출물(trained_models / predictions 딕셔너리 구조)을
-그대로 입력받아 동작한다. 모델 개수가 몇 개든(2개, 3개, 5개...) 코드 수정 없이 동작.
+This stage directly consumes the output of Stage 3 data_modeling(), including the
+trained_models and predictions dictionaries. It works with any number of models
+(2, 3, 5, etc.) without code changes.
 
-이 단계의 책임:
-  1) test 예측 결과 CSV 저장
-  2) 시각화 (모델별 Actual vs Predicted, best_model Feature Importance, MAE 비교)
-  3) 모든 학습된 모델 pickle 저장
-  4) 실행 가능한 인사이트(비즈니스 결론) 생성
-학습 로직 자체는 다루지 않는다 (Stage 3 산출물을 입력으로만 사용).
+Responsibilities of this stage:
+  1) Save test predictions as CSV
+  2) Create visualizations (Actual vs Predicted by model, best-model feature importance, and MAE comparison)
+  3) Save all trained models as pickle files
+  4) Generate actionable insights (business conclusions)
+Training logic is outside this stage; it only consumes Stage 3 output.
 """
 
 import os
@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 def save_predictions(model_output: dict, csv_dir: str, save_dataframe_fn,
                       filename: str = "test_predictions.csv") -> str:
-    """test set 실제값 + 모델별 예측값을 CSV로 저장. 모델 개수와 무관하게 동작."""
+    """Save test-set actuals and each model's predictions to CSV, regardless of model count."""
     y_test = model_output["y_test"]
     pred_df = pd.DataFrame({"actual": y_test.values})
     for name, preds in model_output["predictions"].items():
@@ -34,7 +34,7 @@ def save_predictions(model_output: dict, csv_dir: str, save_dataframe_fn,
 
 def plot_actual_vs_predicted(model_output: dict, visual_dir: str, save_fig_fn,
                               filename: str = "actual_vs_predicted.png") -> str:
-    """모델별 Actual vs Predicted 산점도. 모델 개수에 따라 subplot 개수가 자동으로 늘어남."""
+    """Plot Actual vs Predicted by model, automatically adding subplots as needed."""
     y_test = model_output["y_test"]
     predictions = model_output["predictions"]
     names = list(predictions.keys())
@@ -61,8 +61,8 @@ def plot_actual_vs_predicted(model_output: dict, visual_dir: str, save_fig_fn,
 def plot_feature_importance(model_output: dict, visual_dir: str, save_fig_fn,
                              filename: str = "feature_importance.png", log=None):
     """
-    best_model 기준으로 feature_importances_(트리 계열) 또는 coef_(선형 계열)를 시각화.
-    둘 다 없는 모델이면 스킵하고 None 반환 (에러 없이 조용히 넘어감).
+    Visualize feature_importances_ for tree-based models or coef_ for linear models,
+    using best_model. If neither attribute exists, skip quietly and return None.
     """
     best_model = model_output["best_model"]
     best_name = model_output["best_model_name"]
@@ -88,7 +88,7 @@ def plot_feature_importance(model_output: dict, visual_dir: str, save_fig_fn,
 
 def plot_mae_comparison(model_output: dict, visual_dir: str, save_fig_fn,
                          filename: str = "mae_comparison.png") -> str:
-    """모델별 train/test MAE 비교 막대그래프. 모델 개수와 무관하게 동작."""
+    """Plot train/test MAE comparison bars for any number of models."""
     metrics_df = model_output["metrics"]
     fig, ax = plt.subplots(figsize=(max(6, 2 * len(metrics_df)), 5))
     metrics_df.plot(x="model", y=["train_mae", "test_mae"], kind="bar", ax=ax,
@@ -101,7 +101,7 @@ def plot_mae_comparison(model_output: dict, visual_dir: str, save_fig_fn,
 
 
 def save_models(model_output: dict, root_dir: str, save_pickle_fn) -> dict:
-    """trained_models 안의 모든 모델을 pickle로 저장. 모델 개수와 무관하게 동작."""
+    """Save every model in trained_models as a pickle file, regardless of model count."""
     paths = {}
     for name, model in model_output["trained_models"].items():
         path = save_pickle_fn(model, os.path.join(root_dir, f"RE_{name}_Model.pkl"))
@@ -110,7 +110,7 @@ def save_models(model_output: dict, root_dir: str, save_pickle_fn) -> dict:
 
 
 def generate_insight(model_output: dict, log=None) -> str:
-    """best_model 기준 비즈니스 인사이트 생성 (feature_importances_ 또는 coef_ 활용)."""
+    """Generate business insights from best_model using feature_importances_ or coef_."""
     metrics_df = model_output["metrics"]
     best = metrics_df.loc[metrics_df["test_mae"].idxmin()]
     best_model = model_output["best_model"]
@@ -129,9 +129,9 @@ def generate_insight(model_output: dict, log=None) -> str:
     insight = (
         f"[Model to deploy] {best['model']} "
         f"(Test MAE ${best['test_mae']:,.0f}, R2 {best['test_r2']:.3f}).\n"
-        f"[Top drivers] {top_str} 순으로 가격에 영향을 미침.\n"
-        f"[Action] 위 상위 요인을 기준으로 가격 책정 가이드라인을 조정하고, "
-        f"실거래가와 예측가 차이가 큰 매물은 별도 검토 대상으로 플래그 처리할 것."
+        f"[Top drivers] The features affecting price most are {top_str}, in descending order.\n"
+        f"[Action] Adjust pricing guidelines based on these leading factors, and flag "
+        f"listings with large gaps between actual and predicted prices for separate review."
     )
 
     if log:
@@ -152,19 +152,19 @@ def model_deployment(
     log=None,
 ) -> dict:
     """
-    input: model_output — Stage 3 data_modeling()의 반환값
+    input: model_output — return value from Stage 3 data_modeling()
            (x_train/x_test/y_train/y_test, trained_models, predictions,
-            metrics, best_model, best_model_name 을 포함)
+            including metrics, best_model, and best_model_name)
 
-    처리 순서:
-      1) test 예측 결과 CSV 저장            (csv_dir + save_dataframe_fn 필요)
-      2) 모델별 Actual vs Predicted 저장     (visual_dir + save_fig_fn 필요)
-      3) best_model Feature Importance 저장  (위와 동일)
-      4) train/test MAE 비교 그래프 저장     (위와 동일)
-      5) 모든 학습된 모델 pickle 저장         (root_dir + save_pickle_fn 필요)
-      6) 비즈니스 인사이트 생성 + log
+    Processing sequence:
+      1) Save test predictions as CSV              (requires csv_dir + save_dataframe_fn)
+      2) Save Actual vs Predicted by model         (requires visual_dir + save_fig_fn)
+      3) Save best-model feature importance        (same requirements as above)
+      4) Save the train/test MAE comparison chart  (same requirements as above)
+      5) Save all trained models as pickle files   (requires root_dir + save_pickle_fn)
+      6) Generate and log business insights
 
-    각 단계는 필요한 인자가 없으면 조용히 스킵된다 (부분 실행 가능).
+    Each step is quietly skipped if its required arguments are missing, allowing partial execution.
 
     output: {"prediction_csv_path","actual_vs_predicted_path","importance_path",
              "mae_comparison_path","model_paths","insight"}

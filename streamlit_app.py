@@ -60,7 +60,6 @@ COLOR_PURPLE = "#C9A6E8"
 COLOR_GREEN = "#A8E6A3"
 COLOR_YELLOW = "#FFF09E"
 
-STEP_COLORS = {1: COLOR_BLUE, 2: COLOR_PURPLE, 3: COLOR_GREEN, 4: COLOR_YELLOW}
 _NUMBER_LABEL = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣"}
 
 BG_COLOR = "#000000"
@@ -99,13 +98,6 @@ def render_section_header(color: str, title: str, subtitle: str = None):
         color=color, text=TEXT_COLOR, font=FONT_FAMILY, title=title, subtitle_html=subtitle_html,
     ), unsafe_allow_html=True)
 
-
-def _render_step_card(step: int, title: str, bullets: list):
-    st.markdown(_CARD_TEMPLATE.format(
-        bg=BG_COLOR, text=TEXT_COLOR, font=FONT_FAMILY,
-        color=STEP_COLORS[step], number=_NUMBER_LABEL[step],
-        title=title, bullets=_bullets_html(bullets),
-    ), unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------

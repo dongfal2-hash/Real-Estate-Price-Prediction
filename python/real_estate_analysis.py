@@ -30,9 +30,10 @@ from stage4 import model_deployment
 # Constant path
 # ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_df.csv")  # input name of csv file
-RESULT_DIR = os.path.join(BASE_DIR, "results")
+PROJECT_DIR = os.path.dirname(BASE_DIR)
 
+DATA_PATH = os.path.join(PROJECT_DIR, "data", "cleaned_df.csv")
+RESULT_DIR = os.path.join(PROJECT_DIR, "results")
 # ---------------------------------------------------------------------------
 # Stage 1:  into main() 
 # ---------------------------------------------------------------------------
@@ -41,28 +42,28 @@ RESULT_DIR = os.path.join(BASE_DIR, "results")
 # ---------------------------------------------------------------------------
 # Stage 2: Data Engineering: INPUT CONSTANT 
 # ---------------------------------------------------------------------------
-HOTCODING_COLS = ["property_type"]   # 원-핫 인코딩할 컬럼. 비우면([]) 그냥 패스
+HOTCODING_COLS = ["property_type"]   # for one-hotcoding column [list] 
 TARGET_FEATURE = "price"              # Y
-DROP_FEATURES = []                    # 모델 입력에서 제외할 컬럼
+DROP_FEATURES = []                    # drop features [list]
 
 # ---------------------------------------------------------------------------
 # Stage 3: train/test split: INPUT CONSTANT 
 # ---------------------------------------------------------------------------
-TEST_SIZE = 0.2
-RANDOM_STATE = 42
-STRATIFY_PREFIX = "property_type_Condo"   # None이면 stratify 미적용
+TEST_SIZE = 0.2                         # split train/test size 
+RANDOM_STATE = 42                       # random or repeat (42)
+STRATIFY_PREFIX = "property_type_Condo"   # column stratify 
 
 # ---------------------------------------------------------------------------
 # Stage 3: Hyperparameter: INPUT CONSTANT 
 # ---------------------------------------------------------------------------
-MODEL1_PARAMS = {}   # LinearRegression ()
-MODEL2_PARAMS = {    # RandomForestRegressor
+MODEL1_PARAMS = {}                      # LinearRegression ()
+MODEL2_PARAMS = {                       # RandomForestRegressor
     "n_estimators": 200,
     "criterion": "absolute_error",
     "random_state": RANDOM_STATE,
     "n_jobs": -1,
 }
-MODEL3_PARAMS = {    # GradientBoostingRegressor
+MODEL3_PARAMS = {                       # GradientBoostingRegressor
     "n_estimators": 200,
     "max_depth": 3,
     "learning_rate": 0.1,
@@ -78,7 +79,8 @@ def data_set(data_path: str = DATA_PATH) -> pd.DataFrame:
     input: data_path (cleaned_df.csv )
     output: df
 
-    공통 log(전역)에 데이터 개요(shape, dtype/null 결합 테이블, head/tail)를 기록한다.
+    Record a data overview in the shared (global) log, including the shape, 
+    a combined table of data types and null values, and the first and last few rows.
     """
     df = pd.read_csv(data_path)
 
@@ -99,7 +101,7 @@ def data_set(data_path: str = DATA_PATH) -> pd.DataFrame:
 
 
 def main():
-    # ---------------- Stage 0: 데이터 로드 + EDA ----------------
+    # ---------------- Stage 0: load data+ EDA ----------------
     df = data_set(DATA_PATH)
 
     # ---------------- Stage 2: Data engineering ----------------
@@ -126,7 +128,7 @@ def main():
         log=log,
     )
 
-    # ---------------- Stage 4: store pickle on ML deployment, visualization ----------------
+    # ---------------- Stage 4: store pickle for ML deployment, visualization ----------------
     stage4_out = model_deployment(
         stage3_out,
         csv_dir=paths["csv"], save_dataframe_fn=save_dataframe,

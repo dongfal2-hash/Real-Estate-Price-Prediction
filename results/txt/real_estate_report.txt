@@ -54,14 +54,14 @@ lot_size                 0.181682
 year_sold                0.110064
 year_built               0.032251
 property_type_Condo     -0.271106
-Saved: /Users/dh/Downloads/1-1/results/visual/EDA_heatmap.png
+Saved: /Users/dh/dhwonlab/ML_individual project/ML01_real_estate/results/visual/EDA_heatmap.png
 
 ======================================================================
 STAGE 2 — EDA: TARGET HISTOGRAM
 ======================================================================
 Target: price
 mean=423,055.18  std=151,537.54  min=200,000.00  max=800,000.00
-Saved: /Users/dh/Downloads/1-1/results/visual/EDA_target_histogram.png
+Saved: /Users/dh/dhwonlab/ML_individual project/ML01_real_estate/results/visual/EDA_target_histogram.png
 
 ======================================================================
 STAGE 3 — HYPERPARAMETERS USED
@@ -99,12 +99,12 @@ Best model (lowest test MAE): RandomForestRegressor
 ======================================================================
 STAGE 3 — MODEL COMPARISON GRAPH
 ======================================================================
-Saved: /Users/dh/Downloads/1-1/results/visual/model_comparison.png
+Saved: /Users/dh/dhwonlab/ML_individual project/ML01_real_estate/results/visual/model_comparison.png
 Best model highlighted: RandomForestRegressor
 
 ======================================================================
 STAGE 4 — MODEL DEPLOYMENT / INSIGHT
 ======================================================================
 [Model to deploy] RandomForestRegressor (Test MAE $43,795, R2 0.834).
-[Top drivers] insurance, year_sold, property_tax 순으로 가격에 영향을 미침.
-[Action] 위 상위 요인을 기준으로 가격 책정 가이드라인을 조정하고, 실거래가와 예측가 차이가 큰 매물은 별도 검토 대상으로 플래그 처리할 것.
+[Top drivers] The features affecting price most are insurance, year_sold, property_tax, in descending order.
+[Action] Adjust pricing guidelines based on these leading factors, and flag listings with large gaps between actual and predicted prices for separate review.
