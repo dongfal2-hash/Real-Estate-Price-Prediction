@@ -29,13 +29,13 @@ https://real-estate-price-prediction-3vwfamn7znyrwkrcghkmbh.streamlit.app
 On 1,879 residential transactions, ensemble machine learning decisively outperforms both a linear baseline and, by construction, the simple heuristics it emulates: the deployed Random Forest predicts sale price within **$43,795** on average (R² = 0.834). The analysis yields a clear, actionable insight — anchor pricing guidelines on carrying costs and sale timing rather than size alone, and flag listings with large model-versus-actual gaps for review. Future work should incorporate location features, inflation-adjusted prices, and periodic retraining.
 
 #### References
-'''text
+```text
 [1] R. A. Dubin, “Predicting house prices using multiple listings data,” J. Real Estate Finance Econ., vol. 17, no. 1, pp. 35–59, 1998.
 [2] C. Shearer, “The CRISP-DM model: The new blueprint for data mining,” J. Data Warehousing, vol. 5, no. 4, pp. 13–22, 2000.
 [3] L. Breiman, “Random forests,” Machine Learning, vol. 45, no. 1, pp. 5–32, 2001.
 [4] J. H. Friedman, “Greedy function approximation: A gradient boosting machine,” Ann. Statist., vol. 29, no. 5, pp. 1189–1232, 2001.
 [5] F. Pedregosa et al., “Scikit-learn: Machine learning in Python,” J. Mach. Learn. Res., vol. 12, pp. 2825–2830, 2011.
-'''
+```
 
 
 #### tree 
