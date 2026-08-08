@@ -30,7 +30,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
 def prepare_result_dirs(base_dir: str) -> dict:
-    """base_dir 아래에 txt / csv / visual 하위 폴더를 만들고 경로 dict 반환"""
+    """base_dir 아래에 txt / csv / visual 하위 폴더를 만들고 경로 dict 반환
+    making sub folder below base_dir: txt / csv / visual """
+
     paths = {
         "root": base_dir,
         "txt": os.path.join(base_dir, "txt"),
@@ -43,7 +45,9 @@ def prepare_result_dirs(base_dir: str) -> dict:
 
 
 class ReportLogger:
-    """print()한 내용을 콘솔에 출력하면서 동시에 텍스트 파일에도 기록"""
+    """print()한 내용을 콘솔에 출력하면서 동시에 텍스트 파일에도 기록
+        record contents on text file """
+
 
     def __init__(self, txt_path: str):
         self.txt_path = txt_path
@@ -66,7 +70,9 @@ class ReportLogger:
 
 
 def save_fig(fig_or_plt, visual_dir: str, filename: str, dpi: int = 120):
-    """현재 figure 혹은 전달된 fig 객체를 visual 폴더에 저장"""
+    """현재 figure 혹은 전달된 fig 객체를 visual 폴더에 저장
+        store figure into the visual folder    """
+
     path = os.path.join(visual_dir, filename)
     if hasattr(fig_or_plt, "savefig"):
         fig_or_plt.savefig(path, dpi=dpi, bbox_inches="tight")

@@ -9,6 +9,13 @@ Stage 2 — Data Engineering (원-핫 인코딩 / drop / target 분리 / EDA 시
 처리 순서: 원-핫 인코딩 -> drop -> target(X, y) 분리
            -> (옵션) EDA 시각화(히스토그램/히트맵) -> (옵션) CSV 저장
 train/test split은 다루지 않는다 (Stage 3 modeling의 책임).
+
+#### 
+Key question: Which variables should be included in the model, and in what format, to answer the question defined in Stage 1?
+Processing sequence: One-hot encoding → column removal → target separation (X and y) → optional EDA visualization (histogram/heatmap) → optional CSV export
+
+The train/test split is not performed at this stage, as it is handled in Stage 3: Modeling.
+
 """
 
 import pandas as pd

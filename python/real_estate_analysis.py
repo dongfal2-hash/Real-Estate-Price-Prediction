@@ -3,20 +3,19 @@
 ######################################
 
 """
-main.py — Real Estate Price Prediction 파이프라인 오케스트레이터
+main.py — Real Estate Price Prediction 
+
+Pipeline orchestration
 ====================================================================
-구조:
-  stage0.py  : 공통 유틸(로그/저장 함수) 모듈 — prepare_result_dirs, ReportLogger,
-               save_fig, save_dataframe, save_pickle 등 (예전 ml_utils.py 역할)
-  stage2.py  : data_processing — 원-핫 인코딩 / drop / target 분리 / EDA 시각화
-  stage3.py  : data_modeling   — train/test split + 3개 모델(LR/RF/GBR) 학습·비교
-  stage4.py  : model_deployment — 예측 저장 / 시각화 / 모델 pickle 저장 / 인사이트
-  data_set() : 이 파일(main.py)에서 직접 정의 — 데이터 로드 + EDA 로그 기록
+Structure
+  stage0.py  : prepare_result_dirs, ReportLogger,
+               save_fig, save_dataframe, save_pickle 
+  stage2.py  : data_processing — one-hot encoding , drop, select and drop target feature,  EDA visualization
+  stage3.py  : data_modeling   — train/test split - three machine-learning
+  stage4.py  : model_deployment — model storage on pickle, storeage of expecation and visualization 
+  data_set() : 
 
-전부 같은 폴더에 있는 flat import 구조.
 
-★ 이 파일 상단의 INPUT CONSTANT 섹션이 파이프라인 전체의 유일한 설정 지점이다.
-  값을 바꾸고 싶으면 각 stage 파일이 아니라 여기만 고치면 된다.
 """
 
 import os
@@ -35,6 +34,11 @@ DATA_PATH = os.path.join(BASE_DIR, "data", "cleaned_df.csv")  # input name of cs
 RESULT_DIR = os.path.join(BASE_DIR, "results")
 
 # ---------------------------------------------------------------------------
+# Stage 1:  into main() 
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
 # Stage 2: Data Engineering: INPUT CONSTANT 
 # ---------------------------------------------------------------------------
 HOTCODING_COLS = ["property_type"]   # 원-핫 인코딩할 컬럼. 비우면([]) 그냥 패스
@@ -51,7 +55,7 @@ STRATIFY_PREFIX = "property_type_Condo"   # None이면 stratify 미적용
 # ---------------------------------------------------------------------------
 # Stage 3: Hyperparameter: INPUT CONSTANT 
 # ---------------------------------------------------------------------------
-MODEL1_PARAMS = {}   # LinearRegression (하이퍼파라미터 없음)
+MODEL1_PARAMS = {}   # LinearRegression ()
 MODEL2_PARAMS = {    # RandomForestRegressor
     "n_estimators": 200,
     "criterion": "absolute_error",
@@ -71,7 +75,7 @@ log = ReportLogger(os.path.join(paths["txt"], "real_estate_report.txt"))
 
 def data_set(data_path: str = DATA_PATH) -> pd.DataFrame:
     """
-    input: data_path (cleaned_df.csv 경로)
+    input: data_path (cleaned_df.csv )
     output: df
 
     공통 log(전역)에 데이터 개요(shape, dtype/null 결합 테이블, head/tail)를 기록한다.
@@ -98,7 +102,7 @@ def main():
     # ---------------- Stage 0: 데이터 로드 + EDA ----------------
     df = data_set(DATA_PATH)
 
-    # ---------------- Stage 2: 데이터 엔지니어링 (인코딩/drop/target 분리) + EDA 시각화 ----------------
+    # ---------------- Stage 2: Data engineering ----------------
     stage2_out = data_processing(
         df,
         hotcoding=HOTCODING_COLS,
@@ -109,7 +113,7 @@ def main():
         log=log,
     )
 
-    # ---------------- Stage 3: 3개 모델(LR/RF/GBR) 학습 및 비교 ----------------
+    # ---------------- Stage 3: modeling _ ML-learning ----------------
     stage3_out = data_modeling(
         stage2_out["x"], stage2_out["y"],
         test_size=TEST_SIZE,
@@ -122,7 +126,7 @@ def main():
         log=log,
     )
 
-    # ---------------- Stage 4: 결과 저장 / 시각화 / 모델 pickle 저장 / 인사이트 ----------------
+    # ---------------- Stage 4: store pickle on ML deployment, visualization ----------------
     stage4_out = model_deployment(
         stage3_out,
         csv_dir=paths["csv"], save_dataframe_fn=save_dataframe,
